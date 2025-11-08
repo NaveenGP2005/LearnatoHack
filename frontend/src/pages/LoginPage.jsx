@@ -49,9 +49,9 @@ const LoginPage = () => {
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
               className="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4"
             >
-              <LogIn className="w-8 h-8 text-white" />
+              <LogIn className="w-8 h-8 text-blue" />
             </motion.div>
-            <h2 className="text-3xl font-bold text-white mb-2">
+            <h2 className="text-3xl font-bold text-blue mb-2">
               Welcome Back!
             </h2>
             <p className="text-gray-400">Login to continue to Learnato Forum</p>
@@ -76,8 +76,9 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all [color-scheme:dark]"
                   placeholder="you@example.com"
+                  style={{ color: "#ffffff" }}
                 />
               </div>
             </div>
@@ -100,8 +101,9 @@ const LoginPage = () => {
                   onChange={handleChange}
                   required
                   minLength={6}
-                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all [color-scheme:dark]"
                   placeholder="Enter your password"
+                  style={{ color: "#ffffff" }}
                 />
               </div>
             </div>
@@ -112,7 +114,7 @@ const LoginPage = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-primary-500 to-accent-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-primary-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-primary-500 to-accent-500 text-blue font-semibold rounded-xl hover:shadow-lg hover:shadow-primary-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -146,7 +148,7 @@ const LoginPage = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="button"
-              className="w-full py-3 bg-dark-800/50 border border-dark-700 text-white font-semibold rounded-xl hover:bg-dark-700/50 transition-all duration-300"
+              className="w-full py-3 bg-dark-800/50 border border-dark-700 text-blue font-semibold rounded-xl hover:bg-dark-700/50 transition-all duration-300"
             >
               Create New Account
             </motion.button>

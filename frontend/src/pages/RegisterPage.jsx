@@ -85,9 +85,9 @@ const RegisterPage = () => {
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
               className="w-16 h-16 bg-gradient-to-br from-accent-500 to-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4"
             >
-              <UserPlus className="w-8 h-8 text-white" />
+              <UserPlus className="w-8 h-8 text-blue" />
             </motion.div>
-            <h2 className="text-3xl font-bold text-white mb-2">
+            <h2 className="text-3xl font-bold text-blue mb-2">
               Create Account
             </h2>
             <p className="text-gray-400">Join the Learnato community today!</p>
@@ -114,8 +114,9 @@ const RegisterPage = () => {
                   required
                   minLength={3}
                   maxLength={30}
-                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all [color-scheme:dark]"
                   placeholder="Choose a username"
+                  style={{ color: "#ffffff" }}
                 />
               </div>
             </div>
@@ -137,8 +138,9 @@ const RegisterPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all [color-scheme:dark]"
                   placeholder="you@example.com"
+                  style={{ color: "#ffffff" }}
                 />
               </div>
             </div>
@@ -161,8 +163,9 @@ const RegisterPage = () => {
                   onChange={handleChange}
                   required
                   minLength={6}
-                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-dark-800/50 border border-dark-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all [color-scheme:dark]"
                   placeholder="Create a password"
+                  style={{ color: "#ffffff" }}
                 />
               </div>
               {formData.password && (
@@ -189,12 +192,13 @@ const RegisterPage = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className={`w-full pl-10 pr-4 py-3 bg-dark-800/50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
+                  className={`w-full pl-10 pr-12 py-3 bg-dark-800/50 border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all [color-scheme:dark] ${
                     !passwordMatch
                       ? "border-red-500 focus:ring-red-500"
                       : "border-dark-700 focus:ring-accent-500"
                   }`}
                   placeholder="Confirm your password"
+                  style={{ color: "#ffffff" }}
                 />
                 {formData.confirmPassword && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -219,19 +223,21 @@ const RegisterPage = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-accent-500 to-primary-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-accent-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-accent-500 to-primary-500 rounded-xl hover:shadow-lg hover:shadow-accent-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-5 h-5" />
-                  Create Account
-                </>
-              )}
+              <span className="text-blue font-bold drop-shadow-lg">
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin inline mr-2" />
+                    Creating Account...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-5 h-5 inline mr-2" />
+                    Create Account
+                  </>
+                )}
+              </span>
             </motion.button>
           </form>
 
@@ -253,9 +259,11 @@ const RegisterPage = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="button"
-              className="w-full py-3 bg-dark-800/50 border border-dark-700 text-white font-semibold rounded-xl hover:bg-dark-700/50 transition-all duration-300"
+              className="w-full py-3 bg-dark-800 border-2 border-dark-600 rounded-xl hover:bg-dark-700 hover:border-dark-500 transition-all duration-300"
             >
-              Login to Existing Account
+              <span className="text-blue font-bold">
+                Login to Existing Account
+              </span>
             </motion.button>
           </Link>
         </div>
