@@ -132,15 +132,23 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-purple-50">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Ask a Question</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Ask a Question
+              </h2>
               {user && (
                 <p className="text-xs text-gray-600 mt-1">
-                  Posting as: <span className="font-semibold text-purple-700">{user.username}</span>
+                  Posting as:{" "}
+                  <span className="font-semibold text-purple-700">
+                    {user.username}
+                  </span>
                 </p>
               )}
               {!user && (
                 <p className="text-xs text-gray-600 mt-1">
-                  Posting as: <span className="font-semibold text-gray-700">Guest (Anonymous)</span>
+                  Posting as:{" "}
+                  <span className="font-semibold text-gray-700">
+                    Guest (Anonymous)
+                  </span>
                 </p>
               )}
             </div>

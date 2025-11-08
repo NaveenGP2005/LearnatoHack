@@ -8,8 +8,13 @@ const {
   upvotePost,
   markAsAnswered,
   deletePost,
+  getDiscussionSummary,
+  getAIAssistance,
 } = require("../controllers/postController");
 const { protect, optionalAuth } = require("../middleware/auth");
+
+// AI Assistant route (public) - MUST be before /:id routes to prevent conflict
+router.post("/ai/assist", getAIAssistance);
 
 // Post routes
 router.route("/").get(optionalAuth, getAllPosts).post(optionalAuth, createPost);
@@ -24,5 +29,8 @@ router.post("/:id/upvote", protect, upvotePost);
 
 // Mark as answered route (requires auth)
 router.patch("/:id/answered", protect, markAsAnswered);
+
+// AI Summary route (public)
+router.get("/:id/summary", getDiscussionSummary);
 
 module.exports = router;

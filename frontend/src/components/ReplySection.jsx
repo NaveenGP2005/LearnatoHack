@@ -25,7 +25,7 @@ const ReplySection = ({ postId, replies, onReplyAdded }) => {
 
       await postsAPI.addReply(postId, {
         content: replyContent,
-        author: user ? undefined : (author || "Anonymous"),
+        author: user ? undefined : author || "Anonymous",
       });
 
       setReplyContent("");
@@ -109,7 +109,9 @@ const ReplySection = ({ postId, replies, onReplyAdded }) => {
             <button
               type="submit"
               disabled={isSubmitting || !replyContent.trim()}
-              className={`btn-primary flex items-center justify-center gap-2 ${!user ? '' : 'sm:col-span-2'}`}
+              className={`btn-primary flex items-center justify-center gap-2 ${
+                !user ? "" : "sm:col-span-2"
+              }`}
             >
               {isSubmitting ? (
                 <>

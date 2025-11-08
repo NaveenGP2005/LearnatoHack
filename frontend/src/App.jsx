@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ParticlesBackground from "./components/ParticlesBackground";
 import ConnectionStatus from "./components/ConnectionStatus";
+import AIAssistant from "./components/AIAssistant";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <div className="min-h-screen relative mesh-gradient">
           <ParticlesBackground />
           <ConnectionStatus />
+          <AIAssistant />
           <div className="relative z-10">
             <Navbar />
             <Routes>

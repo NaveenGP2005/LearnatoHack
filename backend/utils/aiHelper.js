@@ -320,3 +320,307 @@ exports.rankSearchResults = (query, posts) => {
 
   return rankedPosts.sort((a, b) => b.searchScore - a.searchScore);
 };
+
+/**
+ * Summarize discussion from post and replies
+ * @param {Object} post - Post with replies
+ * @returns {Object} - Discussion summary
+ */
+exports.summarizeDiscussion = (post) => {
+  if (!post || !post.replies) {
+    return {
+      summary: "No discussion to summarize",
+      totalReplies: 0,
+      keyTopics: [],
+      sentiment: { overall: "neutral", positive: 0, negative: 0, neutral: 0 },
+      topContributors: [],
+    };
+  }
+
+  // Combine all text
+  const allText = [post.content, ...post.replies.map((r) => r.content)].join(
+    " "
+  );
+
+  // Extract key topics
+  const keyTopics = exports.extractKeywords(allText, 8);
+
+  // Analyze sentiment of each reply
+  let positiveCount = 0;
+  let negativeCount = 0;
+  let neutralCount = 0;
+
+  post.replies.forEach((reply) => {
+    const sentiment = exports.analyzeSentiment(reply.content);
+    if (sentiment.isPositive) positiveCount++;
+    else if (sentiment.isNegative) negativeCount++;
+    else neutralCount++;
+  });
+
+  // Find top contributors
+  const contributorMap = {};
+  post.replies.forEach((reply) => {
+    const author = reply.authorName || "Anonymous";
+    contributorMap[author] = (contributorMap[author] || 0) + 1;
+  });
+
+  const topContributors = Object.entries(contributorMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([author, count]) => ({ author, replies: count }));
+
+  // Determine overall sentiment
+  let overallSentiment = "neutral";
+  if (positiveCount > negativeCount && positiveCount > neutralCount) {
+    overallSentiment = "positive";
+  } else if (negativeCount > positiveCount && negativeCount > neutralCount) {
+    overallSentiment = "negative";
+  }
+
+  // Extract important sentences (simple scoring)
+  const sentences = allText.match(/[^.!?]+[.!?]+/g) || [];
+  const importantSentences = sentences
+    .map((sentence) => {
+      const words = tokenizer.tokenize(sentence.toLowerCase());
+      const score = words.filter((word) =>
+        keyTopics.some((topic) => topic.word === word)
+      ).length;
+      return { sentence: sentence.trim(), score };
+    })
+    .filter((s) => s.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((s) => s.sentence);
+
+  return {
+    summary: importantSentences.join(" "),
+    totalReplies: post.replies.length,
+    keyTopics: keyTopics.slice(0, 5).map((t) => t.word),
+    sentiment: {
+      overall: overallSentiment,
+      positive: positiveCount,
+      negative: negativeCount,
+      neutral: neutralCount,
+    },
+    topContributors,
+    statistics: {
+      totalWords: allText.split(" ").length,
+      averageReplyLength: Math.round(
+        post.replies.reduce((sum, r) => sum + r.content.length, 0) /
+          post.replies.length || 0
+      ),
+    },
+  };
+};
+
+/**
+ * AI Assistant - Answer user questions
+ * @param {string} question - User's question
+ * @param {Object} context - Context (posts, stats, etc.)
+ * @returns {Object} - AI response
+ */
+exports.getAIAssistantResponse = async (question, context) => {
+  if (!question) {
+    return {
+      answer: "Hi! I'm your AI assistant. Ask me anything about the forum!",
+      suggestions: [
+        "What are the trending topics?",
+        "Show me popular posts",
+        "Find posts about React",
+        "What's new today?",
+      ],
+    };
+  }
+
+  const lowerQuestion = question.toLowerCase();
+
+  // Trending/Popular questions
+  if (
+    lowerQuestion.includes("trending") ||
+    lowerQuestion.includes("popular") ||
+    lowerQuestion.includes("hot") ||
+    (lowerQuestion.includes("show") &&
+      (lowerQuestion.includes("post") || lowerQuestion.includes("question")))
+  ) {
+    const topPosts = context.posts
+      ? context.posts.sort((a, b) => b.votes - a.votes).slice(0, 5)
+      : [];
+
+    if (topPosts.length === 0) {
+      return {
+        answer: "No posts available yet. Be the first to create one!",
+        suggestions: ["How to create a post?", "What can I do here?"],
+      };
+    }
+
+    return {
+      answer: `Here are the most popular posts right now (${topPosts.length} posts):`,
+      posts: topPosts.map((p) => ({
+        id: p._id,
+        title: p.title,
+        votes: p.votes,
+        replyCount: p.replyCount || 0,
+      })),
+      suggestions: ["Show me recent posts", "What tags are trending?"],
+    };
+  }
+
+  // Search for specific topic
+  const searchTerms = [
+    "react",
+    "javascript",
+    "python",
+    "node",
+    "database",
+    "api",
+    "css",
+    "html",
+  ];
+  const foundTerm = searchTerms.find((term) => lowerQuestion.includes(term));
+
+  if (
+    foundTerm ||
+    lowerQuestion.includes("find") ||
+    lowerQuestion.includes("about")
+  ) {
+    const term = foundTerm || lowerQuestion.split(" ").pop();
+    const matchingPosts = context.posts
+      ? context.posts.filter(
+          (p) =>
+            p.title.toLowerCase().includes(term) ||
+            p.content.toLowerCase().includes(term) ||
+            p.tags?.some((tag) => tag.toLowerCase().includes(term))
+        )
+      : [];
+
+    if (matchingPosts.length > 0) {
+      return {
+        answer: `I found ${matchingPosts.length} post${
+          matchingPosts.length > 1 ? "s" : ""
+        } about "${term}":`,
+        posts: matchingPosts.slice(0, 5).map((p) => ({
+          id: p._id,
+          title: p.title,
+          votes: p.votes,
+        })),
+        suggestions: ["Show me more", "What else is trending?"],
+      };
+    } else {
+      return {
+        answer: `I couldn't find any posts about "${term}". Try asking about different topics!`,
+        suggestions: [
+          "What are the trending topics?",
+          "Show me popular posts",
+          "What's new today?",
+        ],
+      };
+    }
+  }
+
+  // Recent/New questions
+  if (
+    lowerQuestion.includes("recent") ||
+    lowerQuestion.includes("new") ||
+    lowerQuestion.includes("latest")
+  ) {
+    const recentPosts = context.posts
+      ? context.posts
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 5)
+      : [];
+    return {
+      answer: "Here are the most recent posts:",
+      posts: recentPosts.map((p) => ({
+        id: p._id,
+        title: p.title,
+        votes: p.votes,
+      })),
+      suggestions: ["Show popular posts", "What tags are trending?"],
+    };
+  }
+
+  // Help/Guide questions
+  if (
+    lowerQuestion.includes("help") ||
+    lowerQuestion.includes("how to") ||
+    lowerQuestion.includes("guide")
+  ) {
+    return {
+      answer:
+        "I can help you navigate the forum! Here's what you can do:\n\n" +
+        "• Ask questions and get answers from the community\n" +
+        "• Upvote helpful posts\n" +
+        "• Search for topics using the search bar\n" +
+        "• View your profile and reputation\n" +
+        "• Browse by trending tags",
+      suggestions: [
+        "Show me popular posts",
+        "What are the trending topics?",
+        "Find posts about React",
+      ],
+    };
+  }
+
+  // Statistics questions
+  if (
+    lowerQuestion.includes("how many") ||
+    lowerQuestion.includes("statistics") ||
+    lowerQuestion.includes("stats")
+  ) {
+    return {
+      answer: context.stats
+        ? `Forum Statistics:\n\n` +
+          `• Total Posts: ${context.stats.totalPosts || 0}\n` +
+          `• Total Users: ${context.stats.totalUsers || 0}\n` +
+          `• Active Today: ${context.stats.activeToday || 0}\n` +
+          `• Most Active Tag: ${context.stats.topTag || "N/A"}`
+        : "Statistics are currently unavailable.",
+      suggestions: ["Show me popular posts", "What's trending?"],
+    };
+  }
+
+  // Tags questions
+  if (lowerQuestion.includes("tag")) {
+    const tags = context.tags || [];
+    if (tags.length > 0) {
+      // Get posts for trending tags
+      const taggedPosts = context.posts
+        ? context.posts
+            .filter((p) => p.tags && p.tags.some((tag) => tags.includes(tag)))
+            .slice(0, 5)
+        : [];
+
+      return {
+        answer: `Here are the trending tags: ${tags.slice(0, 10).join(", ")}`,
+        posts: taggedPosts.map((p) => ({
+          id: p._id,
+          title: p.title,
+          votes: p.votes,
+          tags: p.tags,
+        })),
+        suggestions: ["Show popular posts", "Find posts about specific topic"],
+      };
+    }
+    return {
+      answer: "No tags available yet. Be the first to create a post!",
+      suggestions: ["Show me popular posts", "What's new today?"],
+    };
+  }
+
+  // Default response
+  return {
+    answer:
+      "I'm here to help! You can ask me about:\n\n" +
+      "• Trending or popular posts\n" +
+      "• Recent discussions\n" +
+      "• Specific topics (React, Python, etc.)\n" +
+      "• Forum statistics\n" +
+      "• How to use the forum",
+    suggestions: [
+      "What are the trending topics?",
+      "Show me popular posts",
+      "Find posts about JavaScript",
+      "What's new today?",
+    ],
+  };
+};

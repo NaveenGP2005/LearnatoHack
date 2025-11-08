@@ -5,6 +5,8 @@ const {
   findSimilarPosts,
   getRelatedQuestions,
   rankSearchResults,
+  summarizeDiscussion,
+  getAIAssistantResponse,
 } = require("../utils/aiHelper");
 
 // @desc    Get all posts
@@ -33,15 +35,19 @@ exports.getAllPosts = async (req, res) => {
     if (search) {
       // rankSearchResults already returns plain objects
       const rankedPosts = rankSearchResults(search, posts);
-      
+
       // Add user vote status if authenticated
       if (req.user) {
         posts = rankedPosts.map((post) => {
           // Find the original mongoose document to check hasVoted
-          const originalPost = posts.find(p => p._id.toString() === post._id.toString());
+          const originalPost = posts.find(
+            (p) => p._id.toString() === post._id.toString()
+          );
           return {
             ...post,
-            hasVoted: originalPost ? originalPost.hasUserVoted(req.user._id) : false,
+            hasVoted: originalPost
+              ? originalPost.hasUserVoted(req.user._id)
+              : false,
           };
         });
       } else {
@@ -110,8 +116,13 @@ exports.getPostById = async (req, res) => {
       });
     }
 
-    // Increment views
-    await post.incrementViews();
+    // Increment views (unique per user/IP)
+    // Use user ID if authenticated, otherwise use IP address
+    const viewerIdentifier = req.user
+      ? `user_${req.user._id}`
+      : `ip_${req.ip || req.connection.remoteAddress}`;
+
+    await post.incrementViews(viewerIdentifier);
 
     // Get related questions using AI
     const allPosts = await Post.find({ _id: { $ne: post._id } }).limit(50);
@@ -499,6 +510,94 @@ exports.deletePost = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error deleting post",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get AI summary of discussion
+// @route   GET /api/posts/:id/summary
+// @access  Public
+exports.getDiscussionSummary = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate("replies.author", "username avatar")
+      .select("-__v");
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    // Generate AI summary
+    const summary = summarizeDiscussion(post);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        postId: post._id,
+        postTitle: post.title,
+        ...summary,
+      },
+    });
+  } catch (error) {
+    console.error("Error generating summary:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error generating discussion summary",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    AI Assistant - Answer questions
+// @route   POST /api/ai/assist
+// @access  Public
+exports.getAIAssistance = async (req, res) => {
+  try {
+    const { question } = req.body;
+
+    // Get context for AI
+    const posts = await Post.find()
+      .sort({ votes: -1, createdAt: -1 })
+      .limit(50)
+      .select("title content votes tags createdAt");
+
+    const totalPosts = await Post.countDocuments();
+    const totalUsers = await User.countDocuments();
+
+    // Get trending tags
+    const trendingTags = await Post.aggregate([
+      { $unwind: "$tags" },
+      { $group: { _id: "$tags", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]);
+
+    const context = {
+      posts: posts.map((p) => p.toObject()),
+      stats: {
+        totalPosts,
+        totalUsers,
+        topTag: trendingTags[0]?._id,
+      },
+      tags: trendingTags.map((t) => t._id),
+    };
+
+    // Get AI response
+    const response = await getAIAssistantResponse(question, context);
+
+    res.status(200).json({
+      success: true,
+      data: response,
+    });
+  } catch (error) {
+    console.error("Error with AI assistance:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error processing AI request",
       error: error.message,
     });
   }

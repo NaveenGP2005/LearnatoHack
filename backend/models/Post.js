@@ -99,6 +99,11 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    viewedBy: [
+      {
+        type: String, // Store IP addresses or session IDs
+      },
+    ],
     createdAt: {
       type: Date,
       default: Date.now,
@@ -119,7 +124,7 @@ postSchema.index({ title: "text", content: "text" });
 
 // Virtual for reply count
 postSchema.virtual("replyCount").get(function () {
-  return this.replies.length;
+  return this.replies ? this.replies.length : 0;
 });
 
 // Method to add a reply
@@ -169,10 +174,23 @@ postSchema.methods.markResolved = function (adminId) {
   return this.save();
 };
 
-// Method to increment views
-postSchema.methods.incrementViews = function () {
-  this.views += 1;
-  return this.save();
+// Method to increment views (only once per unique viewer)
+postSchema.methods.incrementViews = function (viewerIdentifier) {
+  // If no identifier provided, just increment (backward compatibility)
+  if (!viewerIdentifier) {
+    this.views += 1;
+    return this.save();
+  }
+
+  // Check if this viewer has already viewed this post
+  if (!this.viewedBy.includes(viewerIdentifier)) {
+    this.views += 1;
+    this.viewedBy.push(viewerIdentifier);
+    return this.save();
+  }
+
+  // Viewer already counted, don't increment
+  return Promise.resolve(this);
 };
 
 // Ensure virtuals are included in JSON

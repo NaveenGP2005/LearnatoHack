@@ -187,7 +187,9 @@ const AdminDashboard = () => {
                       animate={{
                         width: `${
                           (day.count /
-                            Math.max(...stats.postsPerDay.map((d) => d.count))) *
+                            Math.max(
+                              ...stats.postsPerDay.map((d) => d.count)
+                            )) *
                           100
                         }%`,
                       }}
@@ -202,7 +204,9 @@ const AdminDashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-sm">No activity in the last 7 days</p>
+              <p className="text-gray-500 text-sm">
+                No activity in the last 7 days
+              </p>
             )}
           </div>
         </motion.div>
@@ -220,41 +224,43 @@ const AdminDashboard = () => {
           <div className="space-y-3">
             {stats?.topContributors && stats.topContributors.length > 0 ? (
               stats.topContributors.map((user, index) => (
-              <div
-                key={user._id}
-                className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-white rounded-lg"
-              >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                    index === 0
-                      ? "bg-gradient-to-br from-amber-400 to-yellow-500"
-                      : index === 1
-                      ? "bg-gradient-to-br from-gray-400 to-gray-500"
-                      : index === 2
-                      ? "bg-gradient-to-br from-orange-400 to-amber-500"
-                      : "bg-gradient-to-br from-purple-400 to-pink-500"
-                  }`}
+                  key={user._id}
+                  className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-white rounded-lg"
                 >
-                  {index + 1}
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                      index === 0
+                        ? "bg-gradient-to-br from-amber-400 to-yellow-500"
+                        : index === 1
+                        ? "bg-gradient-to-br from-gray-400 to-gray-500"
+                        : index === 2
+                        ? "bg-gradient-to-br from-orange-400 to-amber-500"
+                        : "bg-gradient-to-br from-purple-400 to-pink-500"
+                    }`}
+                  >
+                    {index + 1}
+                  </div>
+                  <img
+                    src={user.avatar}
+                    alt={user.username}
+                    className="w-10 h-10 rounded-full border-2 border-white shadow"
+                  />
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">
+                      {user.username}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {user.postsCount} posts, {user.repliesCount} replies
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-full">
+                    <Award className="w-4 h-4 text-amber-600" />
+                    <span className="text-sm font-bold text-amber-700">
+                      {user.reputation}
+                    </span>
+                  </div>
                 </div>
-                <img
-                  src={user.avatar}
-                  alt={user.username}
-                  className="w-10 h-10 rounded-full border-2 border-white shadow"
-                />
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{user.username}</p>
-                  <p className="text-xs text-gray-600">
-                    {user.postsCount} posts, {user.repliesCount} replies
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-full">
-                  <Award className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm font-bold text-amber-700">
-                    {user.reputation}
-                  </span>
-                </div>
-              </div>
               ))
             ) : (
               <p className="text-gray-500 text-sm">No contributors yet</p>
@@ -296,7 +302,8 @@ const AdminDashboard = () => {
       </motion.div>
 
       {/* AI Moderation Suggestions */}
-      {moderation && moderation.suggestions &&
+      {moderation &&
+        moderation.suggestions &&
         moderation.suggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -309,149 +316,177 @@ const AdminDashboard = () => {
             </h3>
 
             {/* Duplicate Posts */}
-            {moderation.suggestions.filter(s => s.type === 'duplicate').length > 0 && (
+            {moderation.suggestions.filter((s) => s.type === "duplicate")
+              .length > 0 && (
               <div className="mb-6">
                 <h4 className="font-semibold text-gray-800 mb-3">
-                  📋 Potential Duplicates ({moderation.suggestions.filter(s => s.type === 'duplicate').length})
+                  📋 Potential Duplicates (
+                  {
+                    moderation.suggestions.filter((s) => s.type === "duplicate")
+                      .length
+                  }
+                  )
                 </h4>
                 <div className="space-y-2">
-                  {moderation.suggestions.filter(s => s.type === 'duplicate').slice(0, 3).map((item) => (
-                    <div
-                      key={item.post._id}
-                      className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
-                    >
-                      <p className="font-medium text-gray-900 text-sm">
-                        {item.post.title}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-yellow-700">
-                          Similarity: {Math.round(item.similarity)}%
+                  {moderation.suggestions
+                    .filter((s) => s.type === "duplicate")
+                    .slice(0, 3)
+                    .map((item) => (
+                      <div
+                        key={item.post._id}
+                        className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+                      >
+                        <p className="font-medium text-gray-900 text-sm">
+                          {item.post.title}
                         </p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleResolvePost(item.post._id)}
-                            className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                          >
-                            Resolve
-                          </button>
-                          <button
-                            onClick={() => handleDeletePost(item.post._id)}
-                            className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                          >
-                            Delete
-                          </button>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-yellow-700">
+                            Similarity: {Math.round(item.similarity)}%
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleResolvePost(item.post._id)}
+                              className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                            >
+                              Resolve
+                            </button>
+                            <button
+                              onClick={() => handleDeletePost(item.post._id)}
+                              className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}
 
             {/* Toxic Content */}
-            {moderation.suggestions.filter(s => s.type === 'toxic').length > 0 && (
+            {moderation.suggestions.filter((s) => s.type === "toxic").length >
+              0 && (
               <div className="mb-6">
                 <h4 className="font-semibold text-gray-800 mb-3">
-                  ⚠️ Potentially Toxic Content ({moderation.suggestions.filter(s => s.type === 'toxic').length})
+                  ⚠️ Potentially Toxic Content (
+                  {
+                    moderation.suggestions.filter((s) => s.type === "toxic")
+                      .length
+                  }
+                  )
                 </h4>
                 <div className="space-y-2">
-                  {moderation.suggestions.filter(s => s.type === 'toxic').slice(0, 3).map((item) => (
-                    <div
-                      key={item.post._id}
-                      className="p-3 bg-red-50 border border-red-200 rounded-lg"
-                    >
-                      <p className="font-medium text-gray-900 text-sm line-clamp-1">
-                        {item.post.title}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-red-700">
-                          Confidence: {Math.round(item.toxicityScore * 100)}%
+                  {moderation.suggestions
+                    .filter((s) => s.type === "toxic")
+                    .slice(0, 3)
+                    .map((item) => (
+                      <div
+                        key={item.post._id}
+                        className="p-3 bg-red-50 border border-red-200 rounded-lg"
+                      >
+                        <p className="font-medium text-gray-900 text-sm line-clamp-1">
+                          {item.post.title}
                         </p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleResolvePost(item.post._id)}
-                            className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                          >
-                            Resolve
-                          </button>
-                          <button
-                            onClick={() => handleDeletePost(item.post._id)}
-                            className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                          >
-                            Delete
-                          </button>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-red-700">
+                            Confidence: {Math.round(item.toxicityScore * 100)}%
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleResolvePost(item.post._id)}
+                              className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                            >
+                              Resolve
+                            </button>
+                            <button
+                              onClick={() => handleDeletePost(item.post._id)}
+                              className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}
 
             {/* Low Quality */}
-            {moderation.suggestions.filter(s => s.type === 'low_quality').length > 0 && (
+            {moderation.suggestions.filter((s) => s.type === "low_quality")
+              .length > 0 && (
               <div>
                 <h4 className="font-semibold text-gray-800 mb-3">
-                  📉 Low Quality Posts ({moderation.suggestions.filter(s => s.type === 'low_quality').length})
+                  📉 Low Quality Posts (
+                  {
+                    moderation.suggestions.filter(
+                      (s) => s.type === "low_quality"
+                    ).length
+                  }
+                  )
                 </h4>
                 <div className="space-y-2">
-                  {moderation.suggestions.filter(s => s.type === 'low_quality').slice(0, 3).map((item) => (
-                    <div
-                      key={item.post._id}
-                      className="p-3 bg-gray-50 border border-gray-200 rounded-lg"
-                    >
-                      <p className="font-medium text-gray-900 text-sm line-clamp-1">
-                        {item.post.title}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-gray-600">
-                          {item.reason || 'Low engagement'}
+                  {moderation.suggestions
+                    .filter((s) => s.type === "low_quality")
+                    .slice(0, 3)
+                    .map((item) => (
+                      <div
+                        key={item.post._id}
+                        className="p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                      >
+                        <p className="font-medium text-gray-900 text-sm line-clamp-1">
+                          {item.post.title}
                         </p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleResolvePost(item.post._id)}
-                            className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                          >
-                            Resolve
-                          </button>
-                          <button
-                            onClick={() => handleDeletePost(item.post._id)}
-                            className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                          >
-                            Delete
-                          </button>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-gray-600">
+                            {item.reason || "Low engagement"}
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleResolvePost(item.post._id)}
+                              className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                            >
+                              Resolve
+                            </button>
+                            <button
+                              onClick={() => handleDeletePost(item.post._id)}
+                              className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                    <div
-                      key={post._id}
-                      className="p-3 bg-gray-50 border border-gray-200 rounded-lg"
-                    >
-                      <p className="font-medium text-gray-900 text-sm line-clamp-1">
-                        {post.title}
+                    ))}
+                  <div
+                    key={post._id}
+                    className="p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                  >
+                    <p className="font-medium text-gray-900 text-sm line-clamp-1">
+                      {post.title}
+                    </p>
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-gray-600">
+                        {post.content.length} chars, {post.votes} votes,{" "}
+                        {post.replies?.length || 0} replies
                       </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-gray-600">
-                          {post.content.length} chars, {post.votes} votes,{" "}
-                          {post.replies?.length || 0} replies
-                        </p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleResolvePost(post._id)}
-                            className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                          >
-                            Resolve
-                          </button>
-                          <button
-                            onClick={() => handleDeletePost(post._id)}
-                            className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                          >
-                            Delete
-                          </button>
-                        </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleResolvePost(post._id)}
+                          className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                        >
+                          Resolve
+                        </button>
+                        <button
+                          onClick={() => handleDeletePost(post._id)}
+                          className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </div>
+                  </div>
                   ))}
                 </div>
               </div>

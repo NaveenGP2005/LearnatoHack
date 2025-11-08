@@ -57,6 +57,12 @@ export const postsAPI = {
 
   // Delete post
   deletePost: (postId) => api.delete(`/posts/${postId}`),
+
+  // Get AI discussion summary
+  getSummary: (postId) => api.get(`/posts/${postId}/summary`),
+
+  // AI Assistant
+  askAssistant: (question) => api.post("/posts/ai/assist", { question }),
 };
 
 export default api;

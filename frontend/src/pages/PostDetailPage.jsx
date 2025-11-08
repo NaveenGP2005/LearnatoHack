@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -13,6 +13,9 @@ import {
   Shield,
   Sparkles,
   Eye,
+  FileText,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ReplySection from "../components/ReplySection";
@@ -31,13 +34,21 @@ const PostDetailPage = () => {
   const [error, setError] = useState("");
   const [isUpvoting, setIsUpvoting] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
   const { socket, connected } = useSocket();
+  const hasFetchedRef = useRef(false); // Prevent double fetch in Strict Mode
 
   const hasVoted = post?.hasVoted || false;
   const isResolved = post?.isResolved || false;
-  const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
+  const isAdmin = user?.role === "admin" || user?.role === "moderator";
 
   useEffect(() => {
+    // Prevent double-fetch in React Strict Mode
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     fetchPost();
   }, [id]);
 
@@ -127,11 +138,37 @@ const PostDetailPage = () => {
       setPost({ ...post, isResolved: true, resolvedAt: new Date() });
       toast.success("Post marked as resolved! ✅");
     } catch (error) {
-      const message = error.response?.data?.message || "Error marking as resolved";
+      const message =
+        error.response?.data?.message || "Error marking as resolved";
       toast.error(message);
       console.error("Error marking resolved:", error);
     } finally {
       setIsResolving(false);
+    }
+  };
+
+  const handleGetSummary = async () => {
+    if (!post || post.replies.length === 0) {
+      toast.error("No discussion to summarize yet!");
+      return;
+    }
+
+    if (summary) {
+      setShowSummary(!showSummary);
+      return;
+    }
+
+    try {
+      setLoadingSummary(true);
+      const response = await postsAPI.getSummary(post._id);
+      setSummary(response.data.data);
+      setShowSummary(true);
+      toast.success("AI Summary generated! 🤖");
+    } catch (error) {
+      console.error("Error getting summary:", error);
+      toast.error("Failed to generate summary");
+    } finally {
+      setLoadingSummary(false);
     }
   };
 
@@ -349,6 +386,161 @@ const PostDetailPage = () => {
                 </div>
               </div>
             </motion.div>
+
+            {/* AI Summary Section */}
+            {post.replies && post.replies.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="card p-6 mb-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-600" />
+                    <h3 className="text-lg font-bold text-gray-900">
+                      AI Discussion Summary
+                    </h3>
+                  </div>
+                  <button
+                    onClick={handleGetSummary}
+                    disabled={loadingSummary}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {loadingSummary ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-4 h-4" />
+                        {showSummary ? "Hide" : "Generate"} Summary
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {showSummary && summary && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4"
+                  >
+                    {/* Key Summary */}
+                    {summary.summary && (
+                      <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          {summary.summary}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Statistics Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="p-4 bg-white border-2 border-purple-100 rounded-xl text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <Users className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {summary.totalReplies}
+                        </p>
+                        <p className="text-xs text-gray-600">Replies</p>
+                      </div>
+
+                      <div className="p-4 bg-white border-2 border-green-100 rounded-xl text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <TrendingUp className="w-4 h-4 text-green-600" />
+                        </div>
+                        <p className="text-2xl font-bold text-green-600">
+                          {summary.sentiment?.positive || 0}
+                        </p>
+                        <p className="text-xs text-gray-600">Positive</p>
+                      </div>
+
+                      <div className="p-4 bg-white border-2 border-red-100 rounded-xl text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <TrendingUp className="w-4 h-4 text-red-600 transform rotate-180" />
+                        </div>
+                        <p className="text-2xl font-bold text-red-600">
+                          {summary.sentiment?.negative || 0}
+                        </p>
+                        <p className="text-xs text-gray-600">Negative</p>
+                      </div>
+
+                      <div className="p-4 bg-white border-2 border-gray-100 rounded-xl text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <FileText className="w-4 h-4 text-gray-600" />
+                        </div>
+                        <p className="text-2xl font-bold text-gray-600">
+                          {summary.statistics?.totalWords || 0}
+                        </p>
+                        <p className="text-xs text-gray-600">Words</p>
+                      </div>
+                    </div>
+
+                    {/* Key Topics */}
+                    {summary.keyTopics && summary.keyTopics.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                          <Tag className="w-4 h-4 text-purple-600" />
+                          Key Topics Discussed
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {summary.keyTopics.map((topic, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold"
+                            >
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Top Contributors */}
+                    {summary.topContributors &&
+                      summary.topContributors.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                            <Award className="w-4 h-4 text-amber-600" />
+                            Top Contributors
+                          </h4>
+                          <div className="space-y-2">
+                            {summary.topContributors.map(
+                              (contributor, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between p-2 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg"
+                                >
+                                  <span className="text-sm font-semibold text-gray-900">
+                                    {contributor.author}
+                                  </span>
+                                  <span className="text-xs text-amber-700 font-bold">
+                                    {contributor.replies} replies
+                                  </span>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Overall Sentiment */}
+                    <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-200 text-center">
+                      <p className="text-sm text-gray-600 mb-1">
+                        Overall Discussion Tone
+                      </p>
+                      <p className="text-xl font-bold text-blue-600 capitalize">
+                        {summary.sentiment?.overall || "Neutral"} 😊
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
 
             {/* Replies Section */}
             <motion.div
