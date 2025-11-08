@@ -8,6 +8,20 @@ A modern, full-stack discussion forum built with React, Node.js, and MongoDB. Th
 
 ---
 
+## 🌐 Live Demo
+
+**🚀 [Visit Live Application](https://learnatohack-front.onrender.com)**
+
+**Backend API:** `https://learnatohack-backend.onrender.com`
+
+**Test Credentials:**
+
+- Admin: `admin@learnato.com` / `Admin@123456`
+- Create your own account or use the demo
+- Test User: `naveen@gmail.com` / `naveen123`
+
+---
+
 ## 🌟 Features
 
 - 📝 **Create & Browse Posts** - Ask questions with tags and rich content
@@ -25,22 +39,26 @@ A modern, full-stack discussion forum built with React, Node.js, and MongoDB. Th
 ## 🛠️ Tech Stack
 
 **Frontend**
+
 - React 18 + Vite
 - Tailwind CSS
 - Framer Motion
 - Socket.io Client
 
 **Backend**
+
 - Node.js + Express
 - MongoDB Atlas
 - Socket.io
 - JWT Authentication
 
 **AI/NLP**
+
 - natural (sentiment analysis)
 - compromise (entity extraction)
 
 **DevOps**
+
 - Docker + Docker Compose
 - Nginx
 
@@ -57,12 +75,14 @@ A modern, full-stack discussion forum built with React, Node.js, and MongoDB. Th
 ### Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/NaveenGP2005/LearnatoHack.git
 cd LearnatoHack
 ```
 
 2. **Backend Setup**
+
 ```bash
 cd backend
 npm install
@@ -70,6 +90,7 @@ cp .env.example .env
 ```
 
 Edit `.env` and add your MongoDB Atlas connection string:
+
 ```env
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/discussion-forum
 PORT=5000
@@ -78,11 +99,13 @@ CORS_ORIGIN=http://localhost:3000
 ```
 
 Start backend:
+
 ```bash
 npm run dev
 ```
 
 3. **Frontend Setup** (open new terminal)
+
 ```bash
 cd frontend
 npm install
@@ -90,11 +113,13 @@ cp .env.example .env
 ```
 
 Edit `.env`:
+
 ```env
 VITE_API_URL=http://localhost:5000
 ```
 
 Start frontend:
+
 ```bash
 npm run dev
 ```
@@ -120,6 +145,7 @@ docker-compose up --build
 ## 📡 API Endpoints
 
 ### Posts
+
 - `GET /api/posts` - Get all posts (supports sorting & search)
 - `GET /api/posts/:id` - Get single post with replies
 - `POST /api/posts` - Create new post
@@ -129,15 +155,18 @@ docker-compose up --build
 - `DELETE /api/posts/:id` - Delete post
 
 ### Authentication
+
 - `POST /api/auth/register` - Register user
 - `POST /api/auth/login` - Login
 - `GET /api/auth/me` - Get current user
 
 ### AI Features
+
 - `GET /api/posts/:id/summary` - Get AI discussion summary
 - `POST /api/posts/ai/assist` - Ask AI assistant
 
 ### Admin
+
 - `GET /api/admin/dashboard` - Admin statistics
 
 ---
@@ -168,6 +197,12 @@ docker-compose up --build
 
 ## 🚢 Deployment
 
+### Deployed On
+
+- **Frontend:** [Render](https://learnatohack-front.onrender.com)
+- **Backend:** [Render](https://learnatohack-backend.onrender.com)
+- **Database:** MongoDB Atlas
+
 ### Backend (Render)
 
 1. Create Web Service on [render.com](https://render.com)
@@ -178,9 +213,9 @@ docker-compose up --build
    - Start: `npm start`
 4. Add environment variables
 
-### Frontend (Vercel)
+### Frontend (Render/Vercel)
 
-1. Import repo on [vercel.com](https://vercel.com)
+1. Import repo on [render.com](https://render.com) or [vercel.com](https://vercel.com)
 2. Settings:
    - Root: `frontend`
    - Build: `npm run build`
@@ -192,6 +227,7 @@ docker-compose up --build
 ## 🔧 Environment Variables
 
 **Backend `.env`**
+
 ```env
 MONGODB_URI=mongodb+srv://...
 PORT=5000
@@ -201,6 +237,7 @@ CORS_ORIGIN=https://your-frontend-url.com
 ```
 
 **Frontend `.env`**
+
 ```env
 VITE_API_URL=https://your-backend-url.com
 ```
@@ -229,6 +266,7 @@ MIT License - see [LICENSE](LICENSE)
 
 - GitHub: [@NaveenGP2005](https://github.com/NaveenGP2005)
 - Repository: [LearnatoHack](https://github.com/NaveenGP2005/LearnatoHack)
+- Live Demo: [learnatohack-front.onrender.com](https://learnatohack-front.onrender.com)
 
 ---
 
@@ -236,6 +274,7 @@ MIT License - see [LICENSE](LICENSE)
 
 - Learnato for organizing the hackathon
 - MongoDB Atlas for free cloud database
+- Render for hosting
 - Open source community
 
 ---
@@ -244,8 +283,8 @@ MIT License - see [LICENSE](LICENSE)
 
 **Built for Learnato Hackathon 2025**
 
-*"Empower learning through conversation"*
+_"Empower learning through conversation"_
 
-[⭐ Star this repo](https://github.com/NaveenGP2005/LearnatoHack) if you found it helpful!
+[⭐ Star this repo](https://github.com/NaveenGP2005/LearnatoHack) | [🚀 Try Live Demo](https://learnatohack-front.onrender.com)
 
 </div>
