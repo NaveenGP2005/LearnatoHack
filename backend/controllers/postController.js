@@ -98,6 +98,12 @@ exports.createPost = async (req, res) => {
       tags: tags || [],
     });
 
+    // Emit Socket.io event for real-time update
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("forum").emit("newPost", post);
+    }
+
     res.status(201).json({
       success: true,
       message: "Post created successfully",
@@ -154,6 +160,12 @@ exports.addReply = async (req, res) => {
       author: author?.trim() || "Anonymous",
     });
 
+    // Emit Socket.io event for real-time update
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("forum").emit("newReply", { postId: req.params.id, post });
+    }
+
     res.status(201).json({
       success: true,
       message: "Reply added successfully",
@@ -205,6 +217,15 @@ exports.upvotePost = async (req, res) => {
     // Upvote using model method
     await post.upvote();
 
+    // Emit Socket.io event for real-time update
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("forum").emit("postUpvoted", {
+        postId: req.params.id,
+        votes: post.votes,
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: "Post upvoted successfully",
@@ -248,6 +269,12 @@ exports.markAsAnswered = async (req, res) => {
         success: false,
         message: "Post not found",
       });
+    }
+
+    // Emit Socket.io event for real-time update
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("forum").emit("postAnswered", { postId: req.params.id, post });
     }
 
     res.status(200).json({

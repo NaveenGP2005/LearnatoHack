@@ -10,8 +10,10 @@ import {
   Loader2,
   Tag,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import ReplySection from "../components/ReplySection";
 import { postsAPI } from "../services/api";
+import { useSocket } from "../contexts/SocketContext";
 
 const PostDetailPage = () => {
   const { id } = useParams();
@@ -20,10 +22,46 @@ const PostDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isUpvoting, setIsUpvoting] = useState(false);
+  const { socket, connected } = useSocket();
 
   useEffect(() => {
     fetchPost();
   }, [id]);
+
+  // Listen for real-time updates
+  useEffect(() => {
+    if (!socket || !id) return;
+
+    // Listen for new replies
+    socket.on("newReply", ({ postId, post: updatedPost }) => {
+      if (postId === id) {
+        setPost(updatedPost);
+        toast.success("New reply added!");
+      }
+    });
+
+    // Listen for upvotes
+    socket.on("postUpvoted", ({ postId, votes }) => {
+      if (postId === id) {
+        setPost((prevPost) => ({ ...prevPost, votes }));
+      }
+    });
+
+    // Listen for post marked as answered
+    socket.on("postAnswered", ({ postId }) => {
+      if (postId === id) {
+        setPost((prevPost) => ({ ...prevPost, isAnswered: true }));
+        toast.success("Question marked as answered!");
+      }
+    });
+
+    // Cleanup listeners
+    return () => {
+      socket.off("newReply");
+      socket.off("postUpvoted");
+      socket.off("postAnswered");
+    };
+  }, [socket, id]);
 
   const fetchPost = async () => {
     try {

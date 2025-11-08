@@ -1,11 +1,26 @@
 require("dotenv").config();
 const express = require("express");
+const http = require("http");
+const socketIo = require("socket.io");
 const cors = require("cors");
 const connectDB = require("./config/database");
 const postRoutes = require("./routes/postRoutes");
 
 // Initialize Express app
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io with CORS
+const io = socketIo(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+// Make io accessible to routes
+app.set("socketio", io);
 
 // Connect to MongoDB Atlas
 connectDB();
@@ -76,7 +91,22 @@ app.use((err, req, res, next) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// Socket.io connection handling
+io.on("connection", (socket) => {
+  console.log(`🔌 New client connected: ${socket.id}`);
+
+  // Join a room for real-time updates
+  socket.on("join", () => {
+    socket.join("forum");
+    console.log(`👤 Client ${socket.id} joined forum room`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`❌ Client disconnected: ${socket.id}`);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(
     `🚀 Server running in ${
       process.env.NODE_ENV || "development"
@@ -84,6 +114,7 @@ app.listen(PORT, () => {
   );
   console.log(`📝 API available at http://localhost:${PORT}`);
   console.log(`💚 Health check at http://localhost:${PORT}/health`);
+  console.log(`🔌 WebSocket ready for real-time updates`);
 });
 
 // Handle unhandled promise rejections
