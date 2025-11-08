@@ -9,20 +9,33 @@ import {
   CheckCircle2,
   Loader2,
   Tag,
+  Award,
+  Shield,
+  Sparkles,
+  Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ReplySection from "../components/ReplySection";
 import { postsAPI } from "../services/api";
+import { adminAPI } from "../services/authAPI";
 import { useSocket } from "../contexts/SocketContext";
+import { useAuth } from "../contexts/AuthContext";
 
 const PostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [post, setPost] = useState(null);
+  const [relatedQuestions, setRelatedQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isUpvoting, setIsUpvoting] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
   const { socket, connected } = useSocket();
+
+  const hasVoted = post?.hasVoted || false;
+  const isResolved = post?.isResolved || false;
+  const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
 
   useEffect(() => {
     fetchPost();
@@ -69,6 +82,11 @@ const PostDetailPage = () => {
       setError("");
       const response = await postsAPI.getPost(id);
       setPost(response.data.data);
+
+      // Set related questions if available
+      if (response.data.relatedQuestions) {
+        setRelatedQuestions(response.data.relatedQuestions);
+      }
     } catch (error) {
       console.error("Error fetching post:", error);
       setError("Failed to load question. It may have been deleted.");
@@ -78,16 +96,42 @@ const PostDetailPage = () => {
   };
 
   const handleUpvote = async () => {
-    if (isUpvoting || !post) return;
+    if (isUpvoting || hasVoted || !post) return;
+
+    if (!user) {
+      toast.error("Please login to vote");
+      navigate("/login");
+      return;
+    }
 
     try {
       setIsUpvoting(true);
       await postsAPI.upvotePost(post._id);
-      setPost({ ...post, votes: post.votes + 1 });
+      setPost({ ...post, votes: post.votes + 1, hasVoted: true });
+      toast.success("Vote recorded! 👍");
     } catch (error) {
+      const message = error.response?.data?.message || "Error upvoting";
+      toast.error(message);
       console.error("Error upvoting:", error);
     } finally {
       setIsUpvoting(false);
+    }
+  };
+
+  const handleMarkResolved = async () => {
+    if (!isAdmin || isResolving || isResolved) return;
+
+    try {
+      setIsResolving(true);
+      await adminAPI.markPostResolved(post._id);
+      setPost({ ...post, isResolved: true, resolvedAt: new Date() });
+      toast.success("Post marked as resolved! ✅");
+    } catch (error) {
+      const message = error.response?.data?.message || "Error marking as resolved";
+      toast.error(message);
+      console.error("Error marking resolved:", error);
+    } finally {
+      setIsResolving(false);
     }
   };
 
@@ -137,7 +181,7 @@ const PostDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
         <motion.button
           initial={{ opacity: 0, x: -20 }}
@@ -149,102 +193,219 @@ const PostDetailPage = () => {
           <span className="font-medium">Back to questions</span>
         </motion.button>
 
-        {/* Post Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card p-8 mb-6"
-        >
-          {/* Header */}
-          <div className="flex items-start gap-6 mb-6">
-            {/* Votes */}
-            <div className="flex flex-col items-center space-y-2">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={handleUpvote}
-                disabled={isUpvoting}
-                className={`p-3 rounded-xl transition-all duration-200 ${
-                  isUpvoting
-                    ? "bg-gray-100 text-gray-400"
-                    : "hover:bg-primary-50 text-gray-600 hover:text-primary-600"
-                }`}
-              >
-                <ThumbsUp className="w-6 h-6" />
-              </motion.button>
-              <span className="text-2xl font-bold text-primary-600">
-                {post.votes}
-              </span>
-              <span className="text-xs text-gray-500">votes</span>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {post.title}
-                </h1>
-                {post.isAnswered && (
-                  <span className="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-lg text-sm font-medium whitespace-nowrap">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Answered
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Post Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="card p-8 mb-6"
+            >
+              {/* Header */}
+              <div className="flex items-start gap-6 mb-6">
+                {/* Votes */}
+                <div className="flex flex-col items-center space-y-2">
+                  <motion.button
+                    whileHover={{ scale: hasVoted ? 1 : 1.1 }}
+                    whileTap={{ scale: hasVoted ? 1 : 0.9 }}
+                    onClick={handleUpvote}
+                    disabled={isUpvoting || hasVoted}
+                    className={`p-3 rounded-xl transition-all duration-200 ${
+                      hasVoted
+                        ? "bg-gradient-to-r from-primary-500 to-accent-500 text-white cursor-not-allowed"
+                        : isUpvoting
+                        ? "bg-gray-100 text-gray-400"
+                        : "hover:bg-primary-50 text-gray-600 hover:text-primary-600"
+                    }`}
+                    title={hasVoted ? "You already voted" : "Upvote this post"}
+                  >
+                    <ThumbsUp
+                      className={`w-6 h-6 ${hasVoted ? "fill-current" : ""}`}
+                    />
+                  </motion.button>
+                  <span className="text-2xl font-bold text-primary-600">
+                    {post.votes}
                   </span>
-                )}
-              </div>
+                  <span className="text-xs text-gray-500">votes</span>
+                  {post.views && (
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Eye className="w-3 h-3" />
+                      {post.views}
+                    </div>
+                  )}
+                </div>
 
-              {/* Tags */}
-              {post.tags && post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="flex items-center gap-1 px-3 py-1 bg-primary-50 text-primary-700 rounded-lg text-sm font-medium"
-                    >
-                      <Tag className="w-3 h-3" />
-                      {tag}
+                {/* Content */}
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <h1 className="text-3xl font-bold text-gray-900">
+                      {post.title}
+                    </h1>
+                    <div className="flex gap-2">
+                      {isResolved && (
+                        <span className="flex items-center gap-2 px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium whitespace-nowrap">
+                          <Shield className="w-4 h-4" />
+                          Resolved
+                        </span>
+                      )}
+                      {post.isAnswered && (
+                        <span className="flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-lg text-sm font-medium whitespace-nowrap">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Answered
+                        </span>
+                      )}
+                      {isAdmin && !isResolved && (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handleMarkResolved}
+                          disabled={isResolving}
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          {isResolving ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Resolving...
+                            </>
+                          ) : (
+                            <>
+                              <Shield className="w-4 h-4" />
+                              Mark as Resolved
+                            </>
+                          )}
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="flex items-center gap-1 px-3 py-1 bg-primary-50 text-primary-700 rounded-lg text-sm font-medium"
+                        >
+                          <Tag className="w-3 h-3" />
+                          {tag}
+                        </span>
+                      ))}
+                      {post.aiTags &&
+                        post.aiTags.length > 0 &&
+                        post.aiTags.map((tag, index) => (
+                          <span
+                            key={`ai-${index}`}
+                            className="flex items-center gap-1 px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            {tag}
+                          </span>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* Meta */}
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6">
+                    <div className="flex items-center gap-2">
+                      {post.author?.avatar && (
+                        <img
+                          src={post.author.avatar}
+                          alt={post.authorName}
+                          className="w-6 h-6 rounded-full border border-gray-200"
+                        />
+                      )}
+                      <span className="flex items-center gap-1">
+                        <User className="w-4 h-4" />
+                        Asked by{" "}
+                        <span className="font-medium text-gray-700">
+                          {post.authorName ||
+                            post.author?.username ||
+                            "Anonymous"}
+                        </span>
+                      </span>
+                      {post.author?.reputation > 0 && (
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 rounded-full">
+                          <Award className="w-3 h-3 text-amber-600" />
+                          <span className="text-xs font-bold text-amber-700">
+                            {post.author.reputation}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {formatDate(post.createdAt)}
                     </span>
+                  </div>
+
+                  {/* Description */}
+                  <div className="prose prose-gray max-w-none">
+                    <p className="text-gray-700 text-lg whitespace-pre-wrap leading-relaxed">
+                      {post.content}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Replies Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <ReplySection
+                postId={post._id}
+                replies={post.replies || []}
+                onReplyAdded={fetchPost}
+              />
+            </motion.div>
+          </div>
+
+          {/* Sidebar - Related Questions */}
+          <div className="lg:col-span-1">
+            {relatedQuestions && relatedQuestions.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="card p-6 sticky top-20"
+              >
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                  Related Questions
+                </h3>
+                <div className="space-y-3">
+                  {relatedQuestions.map((related) => (
+                    <motion.button
+                      key={related._id}
+                      whileHover={{ x: 4 }}
+                      onClick={() => navigate(`/post/${related._id}`)}
+                      className="w-full text-left p-3 bg-gradient-to-r from-gray-50 to-white hover:from-primary-50 hover:to-purple-50 rounded-lg border border-gray-200 hover:border-primary-300 transition-all group"
+                    >
+                      <p className="text-sm font-medium text-gray-900 group-hover:text-primary-700 line-clamp-2 mb-2">
+                        {related.title}
+                      </p>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600 flex items-center gap-1">
+                          <ThumbsUp className="w-3 h-3" />
+                          {related.votes} votes
+                        </span>
+                        {related.similarity && (
+                          <span className="text-purple-600 font-semibold">
+                            {Math.round(related.similarity)}% similar
+                          </span>
+                        )}
+                      </div>
+                    </motion.button>
                   ))}
                 </div>
-              )}
-
-              {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-6">
-                <span className="flex items-center gap-1">
-                  <User className="w-4 h-4" />
-                  Asked by{" "}
-                  <span className="font-medium text-gray-700">
-                    {post.author}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {formatDate(post.createdAt)}
-                </span>
-              </div>
-
-              {/* Description */}
-              <div className="prose prose-gray max-w-none">
-                <p className="text-gray-700 text-lg whitespace-pre-wrap leading-relaxed">
-                  {post.content}
-                </p>
-              </div>
-            </div>
+              </motion.div>
+            )}
           </div>
-        </motion.div>
-
-        {/* Replies Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <ReplySection
-            postId={post._id}
-            replies={post.replies || []}
-            onReplyAdded={fetchPost}
-          />
-        </motion.div>
+        </div>
       </div>
     </div>
   );

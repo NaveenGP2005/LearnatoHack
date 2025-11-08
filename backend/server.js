@@ -5,6 +5,8 @@ const socketIo = require("socket.io");
 const cors = require("cors");
 const connectDB = require("./config/database");
 const postRoutes = require("./routes/postRoutes");
+const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 // Initialize Express app
 const app = express();
@@ -55,6 +57,8 @@ app.get("/health", (req, res) => {
 
 // API Routes
 app.use("/api/posts", postRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Root route
 app.get("/", (req, res) => {

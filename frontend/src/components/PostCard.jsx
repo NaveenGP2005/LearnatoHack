@@ -1,22 +1,44 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ThumbsUp, MessageCircle, Clock, CheckCircle2 } from "lucide-react";
+import {
+  ThumbsUp,
+  MessageCircle,
+  Clock,
+  CheckCircle2,
+  Award,
+  Shield,
+} from "lucide-react";
 import { postsAPI } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const PostCard = ({ post, onUpdate }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isUpvoting, setIsUpvoting] = React.useState(false);
+
+  const hasVoted = post.hasVoted || false;
+  const isResolved = post.isResolved || false;
 
   const handleUpvote = async (e) => {
     e.stopPropagation();
-    if (isUpvoting) return;
+    if (isUpvoting || hasVoted) return;
+
+    if (!user) {
+      toast.error("Please login to vote");
+      navigate("/login");
+      return;
+    }
 
     try {
       setIsUpvoting(true);
       await postsAPI.upvotePost(post._id);
+      toast.success("Vote recorded! 👍");
       if (onUpdate) onUpdate();
     } catch (error) {
+      const message = error.response?.data?.message || "Error upvoting";
+      toast.error(message);
       console.error("Error upvoting:", error);
     } finally {
       setIsUpvoting(false);
@@ -62,23 +84,39 @@ const PostCard = ({ post, onUpdate }) => {
         {/* Votes Section */}
         <div className="flex flex-col items-center space-y-2">
           <motion.button
-            whileHover={{ scale: 1.15, rotate: 5 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{
+              scale: hasVoted ? 1 : 1.15,
+              rotate: hasVoted ? 0 : 5,
+            }}
+            whileTap={{ scale: hasVoted ? 1 : 0.9 }}
             onClick={handleUpvote}
-            disabled={isUpvoting}
+            disabled={isUpvoting || hasVoted}
             className={`p-3 rounded-xl transition-all duration-300 backdrop-blur-sm ${
-              isUpvoting
+              hasVoted
+                ? "bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg cursor-not-allowed"
+                : isUpvoting
                 ? "bg-gray-200/50 text-gray-400"
                 : "bg-white/80 hover:bg-gradient-to-r hover:from-primary-50 hover:to-purple-50 text-gray-600 hover:text-primary-600 shadow-md hover:shadow-lg"
             }`}
+            title={hasVoted ? "You already voted" : "Upvote this post"}
           >
             <ThumbsUp
               className={`w-5 h-5 ${
-                isUpvoting ? "" : "group-hover:animate-pulse"
+                hasVoted
+                  ? "fill-current"
+                  : isUpvoting
+                  ? ""
+                  : "group-hover:animate-pulse"
               }`}
             />
           </motion.button>
-          <div className="bg-gradient-to-br from-primary-600 to-purple-600 text-white px-3 py-2 rounded-xl shadow-lg">
+          <div
+            className={`px-3 py-2 rounded-xl shadow-lg ${
+              hasVoted
+                ? "bg-gradient-to-br from-primary-600 to-accent-600"
+                : "bg-gradient-to-br from-primary-600 to-purple-600"
+            } text-white`}
+          >
             <span className="text-lg font-bold block text-center">
               {post.votes}
             </span>
@@ -94,16 +132,29 @@ const PostCard = ({ post, onUpdate }) => {
             <h3 className="text-xl font-bold text-gray-900 group-hover:gradient-text transition-all duration-300 line-clamp-2">
               {post.title}
             </h3>
-            {post.isAnswered && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-lg"
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Answered
-              </motion.span>
-            )}
+            <div className="flex items-center gap-2">
+              {isResolved && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-lg"
+                  title="Resolved by admin"
+                >
+                  <Shield className="w-4 h-4" />
+                  Resolved
+                </motion.span>
+              )}
+              {post.isAnswered && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl text-xs font-bold whitespace-nowrap shadow-lg"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Answered
+                </motion.span>
+              )}
+            </div>
           </div>
 
           <p className="text-gray-700 text-sm line-clamp-2 mb-4 leading-relaxed">
@@ -140,11 +191,29 @@ const PostCard = ({ post, onUpdate }) => {
                 {formatDate(post.createdAt)}
               </span>
             </div>
-            <div className="text-xs font-medium">
-              by{" "}
-              <span className="gradient-text font-bold">
-                {post.author || "Anonymous"}
-              </span>
+            <div className="flex items-center gap-2">
+              {post.author?.reputation !== undefined &&
+                post.author.reputation > 0 && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg">
+                    <Award className="w-3 h-3 text-amber-600" />
+                    <span className="text-xs font-bold text-amber-600">
+                      {post.author.reputation}
+                    </span>
+                  </div>
+                )}
+              <div className="text-xs font-medium flex items-center gap-1.5">
+                {post.author?.avatar && (
+                  <img
+                    src={post.author.avatar}
+                    alt={post.authorName || "User"}
+                    className="w-5 h-5 rounded-full border border-gray-200"
+                  />
+                )}
+                by{" "}
+                <span className="gradient-text font-bold">
+                  {post.authorName || post.author?.username || "Anonymous"}
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -1,15 +1,20 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Tag } from "lucide-react";
+import { X, Send, Tag, Sparkles, User, UserX } from "lucide-react";
 import { postsAPI } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    author: "",
     tags: "",
   });
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [aiTags, setAiTags] = useState([]);
+  const [similarPost, setSimilarPost] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,30 +29,79 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Frontend validation
     if (!formData.title.trim() || !formData.content.trim()) {
       setError("Title and content are required");
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (formData.title.trim().length < 5) {
+      setError("Title must be at least 5 characters long");
+      toast.error("Title must be at least 5 characters");
+      return;
+    }
+
+    if (formData.content.trim().length < 10) {
+      setError("Content must be at least 10 characters long");
+      toast.error("Content must be at least 10 characters");
       return;
     }
 
     try {
       setIsSubmitting(true);
+      setError("");
+      setSimilarPost(null);
+
       const tags = formData.tags
         .split(",")
         .map((tag) => tag.trim())
         .filter((tag) => tag.length > 0);
 
-      await postsAPI.createPost({
+      const response = await postsAPI.createPost({
         title: formData.title,
         content: formData.content,
-        author: formData.author || "Anonymous",
+        isAnonymous: user ? isAnonymous : undefined, // Only send if logged in
         tags,
       });
 
-      setFormData({ title: "", content: "", author: "", tags: "" });
+      // Show AI-suggested tags if any
+      if (response.data.aiSuggestions?.tags?.length > 0) {
+        setAiTags(response.data.aiSuggestions.tags);
+        toast.success(
+          `🤖 AI suggested ${response.data.aiSuggestions.tags.length} tags!`
+        );
+      }
+
+      toast.success("Question posted successfully! 🎉");
+      setFormData({ title: "", content: "", tags: "" });
+      setIsAnonymous(false);
+      setAiTags([]);
+      setSimilarPost(null);
       onPostCreated();
       onClose();
     } catch (error) {
-      setError(error.response?.data?.message || "Error creating post");
+      console.error("Error creating post:", error);
+
+      // Handle validation errors
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        const errorMessages = errors.map((err) => err.message).join(", ");
+        setError(errorMessages);
+        toast.error(errorMessages);
+        return;
+      }
+
+      const errorMsg = error.response?.data?.message || "Error creating post";
+      setError(errorMsg);
+
+      // Check if it's a duplicate post
+      if (error.response?.data?.similarPost) {
+        setSimilarPost(error.response.data.similarPost);
+        toast.error("Similar question already exists!");
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -77,7 +131,19 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-purple-50">
-            <h2 className="text-2xl font-bold text-gray-900">Ask a Question</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Ask a Question</h2>
+              {user && (
+                <p className="text-xs text-gray-600 mt-1">
+                  Posting as: <span className="font-semibold text-purple-700">{user.username}</span>
+                </p>
+              )}
+              {!user && (
+                <p className="text-xs text-gray-600 mt-1">
+                  Posting as: <span className="font-semibold text-gray-700">Guest (Anonymous)</span>
+                </p>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/50 rounded-lg transition-colors"
@@ -99,6 +165,62 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
               >
                 {error}
               </motion.div>
+            )}
+
+            {similarPost && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+              >
+                <p className="text-sm font-semibold text-yellow-800 mb-2">
+                  ⚠️ A similar question already exists:
+                </p>
+                <p className="text-sm text-yellow-700 font-medium">
+                  {similarPost.title}
+                </p>
+                <p className="text-xs text-yellow-600 mt-1">
+                  Similarity: {Math.round(similarPost.similarity)}%
+                </p>
+              </motion.div>
+            )}
+
+            {/* Anonymous Toggle */}
+            {user && (
+              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                <div className="flex items-center gap-2">
+                  {isAnonymous ? (
+                    <UserX className="w-5 h-5 text-purple-600" />
+                  ) : (
+                    <User className="w-5 h-5 text-purple-600" />
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-purple-900">
+                      {isAnonymous
+                        ? "Posting Anonymously"
+                        : `Posting as ${user.username}`}
+                    </p>
+                    <p className="text-xs text-purple-600">
+                      {isAnonymous
+                        ? "Your identity will be hidden"
+                        : "Your name will be visible"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAnonymous(!isAnonymous)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    isAnonymous ? "bg-purple-600" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isAnonymous ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
             )}
 
             <div>
@@ -152,25 +274,34 @@ const CreatePostModal = ({ isOpen, onClose, onPostCreated }) => {
                 placeholder="e.g., react, javascript, hooks (comma separated)"
                 className="input-field"
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Add relevant tags to help others find your question
+              <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-purple-500" />
+                AI will suggest relevant tags automatically
               </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Name
-              </label>
-              <input
-                type="text"
-                name="author"
-                value={formData.author}
-                onChange={handleChange}
-                placeholder="Anonymous"
-                className="input-field"
-                maxLength={50}
-              />
-            </div>
+            {aiTags.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-purple-50 border border-purple-200 rounded-lg"
+              >
+                <p className="text-sm font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  AI Suggested Tags:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {aiTags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
             {/* Footer */}
             <div className="flex gap-3 pt-4">

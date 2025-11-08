@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Send, User, Clock } from "lucide-react";
 import { postsAPI } from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const ReplySection = ({ postId, replies, onReplyAdded }) => {
+  const { user } = useAuth();
   const [replyContent, setReplyContent] = useState("");
   const [author, setAuthor] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,7 +25,7 @@ const ReplySection = ({ postId, replies, onReplyAdded }) => {
 
       await postsAPI.addReply(postId, {
         content: replyContent,
-        author: author || "Anonymous",
+        author: user ? undefined : (author || "Anonymous"),
       });
 
       setReplyContent("");
@@ -92,20 +94,22 @@ const ReplySection = ({ postId, replies, onReplyAdded }) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <input
-                type="text"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                placeholder="Your name (optional)"
-                className="input-field"
-                maxLength={50}
-              />
-            </div>
+            {!user && (
+              <div>
+                <input
+                  type="text"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  placeholder="Your name (optional)"
+                  className="input-field"
+                  maxLength={50}
+                />
+              </div>
+            )}
             <button
               type="submit"
               disabled={isSubmitting || !replyContent.trim()}
-              className="btn-primary flex items-center justify-center gap-2"
+              className={`btn-primary flex items-center justify-center gap-2 ${!user ? '' : 'sm:col-span-2'}`}
             >
               {isSubmitting ? (
                 <>
@@ -157,7 +161,9 @@ const ReplySection = ({ postId, replies, onReplyAdded }) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="font-semibold text-gray-900">
-                        {reply.author || "Anonymous"}
+                        {reply.authorName ||
+                          reply.author?.username ||
+                          "Anonymous"}
                       </span>
                       <span className="text-gray-400">•</span>
                       <span className="text-sm text-gray-500 flex items-center gap-1">
