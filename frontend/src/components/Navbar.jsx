@@ -66,17 +66,6 @@ const Navbar = () => {
               </Link>
             </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500 rounded-xl shadow-lg animate-gradient pulse-glow"
-            >
-              <Sparkles className="w-4 h-4 text-white animate-pulse" />
-              <span className="text-sm font-bold text-white">
-                Hackathon 2025
-              </span>
-            </motion.div>
-
             {/* Auth Buttons */}
             {user ? (
               <div className="relative">

@@ -1,414 +1,251 @@
-# 🚀 Discussion Forum - Learnato Hackathon 2025
+# 🎓 Discussion Forum - Learnato Hackathon 2025
 
-A modern, full-stack discussion forum built with React.js, Tailwind CSS, Node.js, Express, and MongoDB Atlas. This project empowers learning through conversation by allowing users to ask questions, share knowledge, and engage with a community.
+A modern, full-stack discussion forum built with React, Node.js, and MongoDB. This platform enables learners and instructors to ask questions, share knowledge, and engage in meaningful conversations.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-18.2.0-blue.svg)
 
-## ✨ Features
+---
 
-### Core Features
+## 🌟 Features
 
-- 📝 **Create Questions** - Post questions with title, content, and tags
-- 👀 **View Posts** - Browse all questions sorted by votes or date
-- 💬 **Reply System** - Add thoughtful replies to any question
-- 👍 **Upvoting** - Vote for helpful questions and see real-time updates
-- 🔍 **Search** - Find questions quickly with text search
-- ✅ **Answered Status** - Mark questions as answered (instructor feature)
+- 📝 **Create & Browse Posts** - Ask questions with tags and rich content
+- 💬 **Reply System** - Engage in discussions with nested replies
+- 👍 **Upvoting** - Vote for helpful posts and answers
+- 🔍 **Smart Search** - AI-powered search with relevance ranking
+- 🔄 **Real-time Updates** - Live notifications via WebSocket
+- 🤖 **AI Assistant** - Chatbot for trending topics and discussion summaries
+- 🔐 **Authentication** - Secure JWT-based login with role management
+- ✅ **Mark as Answered** - Instructors can resolve questions
+- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
 
-### UI/UX Features
+---
 
-- 🎨 Modern, clean design with Tailwind CSS
-- ✨ Smooth animations with Framer Motion
-- 📱 Fully responsive layout (mobile, tablet, desktop)
-- 🌈 Beautiful gradient accents and hover effects
-- ⚡ Fast and intuitive user experience
-- 🎯 Minimal and professional color scheme
+## 🛠️ Tech Stack
 
-### Technical Features
+**Frontend**
+- React 18 + Vite
+- Tailwind CSS
+- Framer Motion
+- Socket.io Client
 
-- 🐳 Docker containerization for easy deployment
-- 🔄 RESTful API with proper error handling
-- 🗄️ MongoDB Atlas cloud database integration
-- 🔐 CORS and security best practices
-- 📊 Scalable MVC architecture
-- 🚀 Production-ready with health checks
+**Backend**
+- Node.js + Express
+- MongoDB Atlas
+- Socket.io
+- JWT Authentication
 
-## 📸 Screenshots
+**AI/NLP**
+- natural (sentiment analysis)
+- compromise (entity extraction)
 
-<!-- Add your screenshots here -->
+**DevOps**
+- Docker + Docker Compose
+- Nginx
 
-```
-[Home Page] [Post Detail] [Create Post Modal]
-```
-
-## 🏗️ Project Structure
-
-```
-discussion-forum/
-├── backend/                 # Node.js + Express API
-│   ├── config/             # Database configuration
-│   ├── controllers/        # Business logic
-│   ├── models/             # Mongoose schemas
-│   ├── routes/             # API routes
-│   ├── .env.example        # Environment template
-│   ├── Dockerfile          # Backend container
-│   ├── package.json
-│   └── server.js           # Entry point
-├── frontend/               # React + Tailwind app
-│   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── pages/          # Page components
-│   │   ├── services/       # API integration
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── .env.example        # Environment template
-│   ├── Dockerfile          # Frontend container
-│   ├── nginx.conf          # Nginx configuration
-│   ├── tailwind.config.js
-│   └── package.json
-├── docker-compose.yml      # Container orchestration
-├── .gitignore
-└── README.md
-```
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18 or higher
-- MongoDB Atlas account (get free tier at [mongodb.com](https://www.mongodb.com/cloud/atlas))
+- Node.js 18+
+- MongoDB Atlas account (free tier available)
 - npm or yarn
-- Docker (optional, for containerized deployment)
 
-### Option 1: Local Development
+### Installation
 
-#### Backend Setup
+1. **Clone the repository**
+```bash
+git clone https://github.com/NaveenGP2005/LearnatoHack.git
+cd LearnatoHack
+```
 
-1. **Navigate to backend directory:**
-
+2. **Backend Setup**
 ```bash
 cd backend
-```
-
-2. **Install dependencies:**
-
-```bash
 npm install
-```
-
-3. **Create environment file:**
-
-```bash
 cp .env.example .env
 ```
 
-4. **Add your MongoDB Atlas connection string to `.env`:**
-
+Edit `.env` and add your MongoDB Atlas connection string:
 ```env
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/discussion-forum?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/discussion-forum
 PORT=5000
-NODE_ENV=development
+JWT_SECRET=your-secret-key
 CORS_ORIGIN=http://localhost:3000
 ```
 
-**How to get MongoDB Atlas connection string:**
-
-- Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-- Create a new cluster (free tier available)
-- Click "Connect" → "Connect your application"
-- Copy the connection string and replace `<username>` and `<password>`
-
-5. **Start the backend:**
-
+Start backend:
 ```bash
-# Development mode with auto-reload
 npm run dev
-
-# Production mode
-npm start
 ```
 
-Backend will run at `http://localhost:5000`
-
-#### Frontend Setup
-
-1. **Navigate to frontend directory:**
-
+3. **Frontend Setup** (open new terminal)
 ```bash
 cd frontend
-```
-
-2. **Install dependencies:**
-
-```bash
 npm install
-```
-
-3. **Create environment file:**
-
-```bash
 cp .env.example .env
 ```
 
-4. **Configure API URL in `.env`:**
-
+Edit `.env`:
 ```env
 VITE_API_URL=http://localhost:5000
 ```
 
-5. **Start the frontend:**
-
+Start frontend:
 ```bash
 npm run dev
 ```
 
-Frontend will run at `http://localhost:3000`
+Visit **http://localhost:3000** 🎉
 
-### Option 2: Docker Deployment
+---
 
-1. **Create `.env` file in root directory with your MongoDB Atlas connection string:**
-
-```env
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/discussion-forum?retryWrites=true&w=majority
-```
-
-2. **Build and run with Docker Compose:**
+## 🐳 Docker Setup
 
 ```bash
+# Create .env file with your MongoDB URI
+echo "MONGODB_URI=your_connection_string" > .env
+
+# Start containers
 docker-compose up --build
+
+# Access at http://localhost:3000
 ```
 
-3. **Access the application:**
+---
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
-- Health Check: http://localhost:5000/health
+## 📡 API Endpoints
 
-4. **Stop the containers:**
+### Posts
+- `GET /api/posts` - Get all posts (supports sorting & search)
+- `GET /api/posts/:id` - Get single post with replies
+- `POST /api/posts` - Create new post
+- `POST /api/posts/:id/reply` - Add reply
+- `POST /api/posts/:id/upvote` - Upvote post
+- `PATCH /api/posts/:id/answered` - Mark as answered
+- `DELETE /api/posts/:id` - Delete post
 
-```bash
-docker-compose down
+### Authentication
+- `POST /api/auth/register` - Register user
+- `POST /api/auth/login` - Login
+- `GET /api/auth/me` - Get current user
+
+### AI Features
+- `GET /api/posts/:id/summary` - Get AI discussion summary
+- `POST /api/posts/ai/assist` - Ask AI assistant
+
+### Admin
+- `GET /api/admin/dashboard` - Admin statistics
+
+---
+
+## 🏗️ Project Structure
+
+```
+├── backend/
+│   ├── config/          # Database config
+│   ├── controllers/     # Business logic
+│   ├── models/          # MongoDB schemas
+│   ├── routes/          # API routes
+│   ├── middleware/      # Auth middleware
+│   ├── utils/           # AI/NLP helpers
+│   └── server.js        # Entry point
+├── frontend/
+│   ├── src/
+│   │   ├── components/  # React components
+│   │   ├── pages/       # Page components
+│   │   ├── contexts/    # State management
+│   │   └── services/    # API client
+│   └── Dockerfile
+├── docker-compose.yml
+└── README.md
 ```
 
-## 📚 API Documentation
-
-### Base URL
-
-```
-http://localhost:5000/api
-```
-
-### Endpoints
-
-| Method   | Endpoint              | Description      | Request Body                              |
-| -------- | --------------------- | ---------------- | ----------------------------------------- |
-| `GET`    | `/posts`              | Get all posts    | Query params: `sortBy`, `order`, `search` |
-| `GET`    | `/posts/:id`          | Get single post  | -                                         |
-| `POST`   | `/posts`              | Create new post  | `{ title, content, author?, tags? }`      |
-| `POST`   | `/posts/:id/reply`    | Add reply        | `{ content, author? }`                    |
-| `POST`   | `/posts/:id/upvote`   | Upvote post      | -                                         |
-| `PATCH`  | `/posts/:id/answered` | Mark as answered | -                                         |
-| `DELETE` | `/posts/:id`          | Delete post      | -                                         |
-
-### Example Requests
-
-**Create a Post:**
-
-```bash
-curl -X POST http://localhost:5000/api/posts \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "How to use React Hooks?",
-    "content": "I am new to React and want to understand hooks better...",
-    "author": "John Doe",
-    "tags": ["react", "hooks", "javascript"]
-  }'
-```
-
-**Get All Posts (Sorted by Votes):**
-
-```bash
-curl http://localhost:5000/api/posts?sortBy=votes&order=desc
-```
-
-**Add Reply:**
-
-```bash
-curl -X POST http://localhost:5000/api/posts/[POST_ID]/reply \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "Great question! Here is how...",
-    "author": "Jane Smith"
-  }'
-```
-
-**Upvote Post:**
-
-```bash
-curl -X POST http://localhost:5000/api/posts/[POST_ID]/upvote
-```
-
-## 🛠️ Technology Stack
-
-### Frontend
-
-- **React 18.2** - UI library
-- **Tailwind CSS 3.3** - Utility-first CSS framework
-- **Framer Motion 10.16** - Animation library
-- **React Router DOM 6.20** - Client-side routing
-- **Axios 1.6** - HTTP client
-- **Lucide React** - Beautiful icon library
-- **Vite 5** - Build tool and dev server
-
-### Backend
-
-- **Node.js 18** - Runtime environment
-- **Express 4.18** - Web framework
-- **MongoDB Atlas** - Cloud database
-- **Mongoose 8** - ODM for MongoDB
-- **CORS** - Cross-origin resource sharing
-- **dotenv** - Environment variables
-
-### DevOps
-
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
-- **Nginx** - Web server for frontend
-
-## 🎨 Design Philosophy
-
-- **Minimal & Modern** - Clean interface with neutral backgrounds and indigo/purple accents
-- **User-Friendly** - Intuitive navigation and clear visual hierarchy
-- **Responsive** - Mobile-first design that works on all devices
-- **Accessible** - Proper contrast ratios and semantic HTML
-- **Performant** - Optimized bundle size and fast load times
-
-## 🧪 Testing
-
-### Backend Testing
-
-```bash
-cd backend
-npm test
-```
-
-### Frontend Testing
-
-```bash
-cd frontend
-npm test
-```
-
-## 📦 Building for Production
-
-### Backend
-
-```bash
-cd backend
-npm start
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm run build
-npm run preview
-```
+---
 
 ## 🚢 Deployment
 
-### Deploy to Render (Backend)
+### Backend (Render)
 
-1. Create account at [render.com](https://render.com)
-2. Create new Web Service
-3. Connect GitHub repository
-4. Set build command: `cd backend && npm install`
-5. Set start command: `cd backend && npm start`
-6. Add environment variable: `MONGODB_URI`
+1. Create Web Service on [render.com](https://render.com)
+2. Connect GitHub repo
+3. Settings:
+   - Root: `backend`
+   - Build: `npm install`
+   - Start: `npm start`
+4. Add environment variables
 
-### Deploy to Vercel (Frontend)
+### Frontend (Vercel)
 
-1. Create account at [vercel.com](https://vercel.com)
-2. Import GitHub repository
-3. Set root directory: `frontend`
-4. Set build command: `npm run build`
-5. Set output directory: `dist`
-6. Add environment variable: `VITE_API_URL`
+1. Import repo on [vercel.com](https://vercel.com)
+2. Settings:
+   - Root: `frontend`
+   - Build: `npm run build`
+   - Output: `dist`
+3. Add `VITE_API_URL` environment variable
 
-### Deploy with Docker (Any Platform)
+---
 
-```bash
-# Build images
-docker-compose build
+## 🔧 Environment Variables
 
-# Push to registry
-docker tag discussion-forum-backend your-registry/backend
-docker push your-registry/backend
-
-docker tag discussion-forum-frontend your-registry/frontend
-docker push your-registry/frontend
-
-# Deploy to cloud (AWS, GCP, Azure, DigitalOcean, etc.)
-```
-
-## 🔐 Environment Variables
-
-### Backend (.env)
-
+**Backend `.env`**
 ```env
-MONGODB_URI=your_mongodb_atlas_connection_string
+MONGODB_URI=mongodb+srv://...
 PORT=5000
 NODE_ENV=production
-CORS_ORIGIN=https://your-frontend-domain.com
+JWT_SECRET=your-secret-key
+CORS_ORIGIN=https://your-frontend-url.com
 ```
 
-### Frontend (.env)
-
+**Frontend `.env`**
 ```env
-VITE_API_URL=https://your-backend-api-domain.com
+VITE_API_URL=https://your-backend-url.com
 ```
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+1. Fork the repo
+2. Create feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'Add feature'`)
+4. Push to branch (`git push origin feature/amazing`)
+5. Open Pull Request
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+---
 
-## 📝 License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE)
 
-## 👥 Authors
+---
 
-**Learnato Hackathon Team**
+## 👤 Author
 
-- Built for Learnato Hackathon 2025
-- Empowering learning through conversation
+**Naveen GP**
+
+- GitHub: [@NaveenGP2005](https://github.com/NaveenGP2005)
+- Repository: [LearnatoHack](https://github.com/NaveenGP2005/LearnatoHack)
+
+---
 
 ## 🙏 Acknowledgments
 
 - Learnato for organizing the hackathon
 - MongoDB Atlas for free cloud database
-- Open source community for amazing tools
-
-## 📞 Support
-
-For issues and questions:
-
-- Open an issue on GitHub
-- Contact: [your-email@example.com]
+- Open source community
 
 ---
 
 <div align="center">
-  <strong>🎓 Built with ❤️ for Learnato Hackathon 2025</strong>
-  <br>
-  <sub>Empowering Learning Through Conversation</sub>
+
+**Built for Learnato Hackathon 2025**
+
+*"Empower learning through conversation"*
+
+[⭐ Star this repo](https://github.com/NaveenGP2005/LearnatoHack) if you found it helpful!
+
 </div>

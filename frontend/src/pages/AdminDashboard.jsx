@@ -459,35 +459,6 @@ const AdminDashboard = () => {
                         </div>
                       </div>
                     ))}
-                  <div
-                    key={post._id}
-                    className="p-3 bg-gray-50 border border-gray-200 rounded-lg"
-                  >
-                    <p className="font-medium text-gray-900 text-sm line-clamp-1">
-                      {post.title}
-                    </p>
-                    <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-gray-600">
-                        {post.content.length} chars, {post.votes} votes,{" "}
-                        {post.replies?.length || 0} replies
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleResolvePost(post._id)}
-                          className="text-xs px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                        >
-                          Resolve
-                        </button>
-                        <button
-                          onClick={() => handleDeletePost(post._id)}
-                          className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  ))}
                 </div>
               </div>
             )}
@@ -600,28 +571,37 @@ const AdminDashboard = () => {
         >
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Clock className="w-5 h-5 text-purple-600" />
-            Analytics Summary
+            Analytics Summary ({timeRange})
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl">
               <p className="text-sm text-gray-600 mb-1">User Growth</p>
               <p className="text-3xl font-bold text-blue-600">
-                {analytics.userGrowth?.length || 0}
+                +
+                {analytics.userGrowth?.reduce(
+                  (sum, day) => sum + day.count,
+                  0
+                ) || 0}
               </p>
               <p className="text-xs text-gray-500 mt-1">new users in period</p>
             </div>
             <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl">
               <p className="text-sm text-gray-600 mb-1">Post Activity</p>
               <p className="text-3xl font-bold text-purple-600">
-                {analytics.postActivity?.length || 0}
+                {analytics.postActivity?.reduce(
+                  (sum, day) => sum + day.posts,
+                  0
+                ) || 0}
               </p>
               <p className="text-xs text-gray-500 mt-1">posts in period</p>
             </div>
             <div className="text-center p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
               <p className="text-sm text-gray-600 mb-1">Avg Response Time</p>
               <p className="text-3xl font-bold text-green-600">
-                {analytics.averageResponseTime
-                  ? `${Math.round(analytics.averageResponseTime / 60)}m`
+                {analytics.responseTimes?.avgResponseTime
+                  ? `${Math.round(
+                      analytics.responseTimes.avgResponseTime / 1000 / 60
+                    )}m`
                   : "N/A"}
               </p>
               <p className="text-xs text-gray-500 mt-1">
